@@ -18,3 +18,26 @@ _build/
 # oasis generated files
 setup.data
 setup.log
+# Compiled Object files
+*.slo
+*.lo
+*.o
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+
+# Compiled Python Files
+*.pyc
+
+# Backup/Temp/IDE Files
+.idea
+.#*
+#*.*
+*.*#
+*.*~
