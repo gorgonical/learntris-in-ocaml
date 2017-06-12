@@ -1,9 +1,25 @@
 open Core
 
+type tetramino = I | O | None;;
+
+let is_tetramino x =
+  match x with
+  | "I" | "O" -> true
+  | _ -> false
+;;
+
+let tetramino_from_string string =
+  match string with
+  | "I" -> I
+  | "O" -> O
+  | _ -> None
+;;
+
 type game_info =
   {
     mutable score : int;
     mutable lines_cleared : int;
+    mutable active_tetramino : tetramino;
   }
 ;;
 
@@ -85,6 +101,29 @@ let one_step board game_data =
    (board, game_data))
 ;;
 
+let print_tetramino tetramino =
+  begin
+    (match tetramino with
+    | I ->
+       Out_channel.output_string Out_channel.stdout
+        (". . . ." ^ "\n" ^
+         "c c c c" ^ "\n" ^
+         ". . . ." ^ "\n" ^
+         ". . . ." ^ "\n")
+    | O ->
+       Out_channel.output_string Out_channel.stdout
+        ("y y" ^ "\n" ^
+         "y y")
+    | None | _ ->
+       Out_channel.output_string Out_channel.stdout
+        (". . . ." ^ "\n" ^
+         ". . . ." ^ "\n" ^
+         ". . . ." ^ "\n" ^
+         ". . . ." ^ "\n"));
+    Out_channel.flush Out_channel.stdout;
+  end
+;;
+
 let rec input_loop board game_data =
   match In_channel.input_line In_channel.stdin with
   | Some x when x = "q" -> None
@@ -97,14 +136,22 @@ let rec input_loop board game_data =
   | Some x when x = "s" ->
      let (new_board, new_data) = one_step board game_data in
      input_loop new_board new_data
+  | Some x when x = "t" ->
+     begin
+       print_tetramino game_data.active_tetramino;
+       input_loop board game_data
+     end
+  | Some x when is_tetramino x ->
+     input_loop board {game_data with active_tetramino = tetramino_from_string x;}
   | Some x when (String.is_prefix x ~prefix:"?") ->
      input_loop (process_query x board game_data) game_data
-  | None | Some _ -> input_loop board game_data
-
+  | None -> input_loop board game_data
+  | Some _ -> None
 ;;
 
 let game_data = {
     score = 0;
     lines_cleared = 0;
+    active_tetramino = None;
   } in
 input_loop (clear_board ()) game_data ;;
