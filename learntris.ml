@@ -1,10 +1,10 @@
-open Core
+open Core;;
 
-type tetramino = I | O | None;;
+type tetramino = I | O | Z | S | J | L | T | None;;
 
 let is_tetramino x =
   match x with
-  | "I" | "O" -> true
+  | "I" | "O" | "Z" | "S" | "J" | "L" | "T" -> true
   | _ -> false
 ;;
 
@@ -12,6 +12,11 @@ let tetramino_from_string string =
   match string with
   | "I" -> I
   | "O" -> O
+  | "Z" -> Z
+  | "S" -> S
+  | "J" -> J
+  | "L" -> L
+  | "T" -> T
   | _ -> None
 ;;
 
@@ -102,50 +107,95 @@ let one_step board game_data =
 ;;
 
 let print_tetramino tetramino =
-  begin
+  let tetramino_string =
     (match tetramino with
     | I ->
-       Out_channel.output_string Out_channel.stdout
         (". . . ." ^ "\n" ^
          "c c c c" ^ "\n" ^
          ". . . ." ^ "\n" ^
          ". . . ." ^ "\n")
     | O ->
-       Out_channel.output_string Out_channel.stdout
         ("y y" ^ "\n" ^
          "y y")
-    | None | _ ->
-       Out_channel.output_string Out_channel.stdout
+    | Z ->
+        ("r r ." ^ "\n" ^
+         ". r r" ^ "\n" ^
+         ". . ." ^ "\n")
+    | S ->
+       (". g g" ^ "\n" ^
+        "g g ." ^ "\n" ^
+        ". . ." ^ "\n")
+    | J ->
+       ("b . ." ^ "\n" ^
+        "b b b" ^ "\n" ^
+        ". . ." ^ "\n")
+    | L ->
+       (". . o" ^ "\n" ^
+        "o o o" ^ "\n" ^
+        ". . ." ^ "\n")
+    | T ->
+       (". m ." ^ "\n" ^
+        "m m m" ^ "\n" ^
+        ". . ." ^ "\n")
+    | _ ->
         (". . . ." ^ "\n" ^
          ". . . ." ^ "\n" ^
          ". . . ." ^ "\n" ^
-         ". . . ." ^ "\n"));
-    Out_channel.flush Out_channel.stdout;
+         ". . . ." ^ "\n")) in
+  begin
+    Out_channel.output_string Out_channel.stdout tetramino_string;
+    Out_channel.flush Out_channel.stdout
   end
 ;;
 
-let rec input_loop board game_data =
-  match In_channel.input_line In_channel.stdin with
+let rec condense_list list =
+  match list with
+  | [] -> []
+  | sole::[] -> sole::[]
+  | first::second::[] -> (if first = second then first::[]
+                          else first::second::[])
+  | first::second::rest -> (if first = second then (condense_list (first::rest))
+                                else first::(condense_list (second::rest)))
+;;
+
+let get_input command_queue =
+  if Queue.length command_queue = 0 then
+    begin
+      match In_channel.input_line In_channel.stdin with
+      | Some x ->
+         let command_list = String.split ~on:' ' x in
+         let condensed_list = condense_list command_list in
+         begin
+           List.iter condensed_list ~f:(fun elem -> Queue.enqueue command_queue elem);
+           Queue.dequeue command_queue
+         end
+      | None -> None
+    end
+  else Queue.dequeue command_queue
+;;
+
+let rec input_loop board game_data command_queue =
+  match get_input command_queue with
   | Some x when x = "q" -> None
   | Some x when x = "p" ->
-     input_loop (print_board board) game_data
+     input_loop (print_board board) game_data command_queue
   | Some x when x = "g" ->
-     input_loop (read_board board) game_data
+     input_loop (read_board board) game_data command_queue
   | Some x when x = "c" ->
-     input_loop (clear_board ()) game_data
+     input_loop (clear_board ()) game_data command_queue
   | Some x when x = "s" ->
      let (new_board, new_data) = one_step board game_data in
-     input_loop new_board new_data
+     input_loop new_board new_data command_queue
   | Some x when x = "t" ->
      begin
        print_tetramino game_data.active_tetramino;
-       input_loop board game_data
+       input_loop board game_data command_queue
      end
   | Some x when is_tetramino x ->
-     input_loop board {game_data with active_tetramino = tetramino_from_string x;}
+     input_loop board {game_data with active_tetramino = tetramino_from_string x;} command_queue
   | Some x when (String.is_prefix x ~prefix:"?") ->
-     input_loop (process_query x board game_data) game_data
-  | None -> input_loop board game_data
+     input_loop (process_query x board game_data) game_data command_queue
+  | None -> input_loop board game_data command_queue
   | Some _ -> None
 ;;
 
@@ -154,4 +204,4 @@ let game_data = {
     lines_cleared = 0;
     active_tetramino = None;
   } in
-input_loop (clear_board ()) game_data ;;
+input_loop (clear_board ()) game_data (Queue.create ());;
