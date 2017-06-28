@@ -60,8 +60,6 @@ let read_board board =
 let clear_board () = Array.make_matrix ~dimx:22 ~dimy:10 (None : tetramino)
 ;;
 
-
-
 let print_cell tetramino =
   match tetramino with
   | I -> "c"
@@ -118,44 +116,45 @@ let one_step board game_data =
 
 let print_tetramino tetramino_tuple =
   let tetramino_string =
-    (match tetramino_tuple with
+    match tetramino_tuple with
     | (I, _) ->
-        (". . . ." ^ "\n" ^
-         "c c c c" ^ "\n" ^
-         ". . . ." ^ "\n" ^
-         ". . . ." ^ "\n")
+       String.concat ~sep:"\n" [". . . .";
+                                "c c c c";
+                                ". . . .";
+                                ". . . ."]
     | (O, _) ->
-        ("y y" ^ "\n" ^
-         "y y")
+       String.concat ~sep:"\n" ["y y";
+                                "y y"]
     | (Z, _) ->
-        ("r r ." ^ "\n" ^
-         ". r r" ^ "\n" ^
-         ". . ." ^ "\n")
+       String.concat ~sep:"\n" ["r r .";
+                                ". r r";
+                                ". . ."]
     | (S, _) ->
-       (". g g" ^ "\n" ^
-        "g g ." ^ "\n" ^
-        ". . ." ^ "\n")
+       String.concat ~sep:"\n" [". g g";
+                                "g g .";
+                                ". . ."]
     | (J, _) ->
-       ("b . ." ^ "\n" ^
-        "b b b" ^ "\n" ^
-        ". . ." ^ "\n")
+       String.concat ~sep:"\n" ["b . .";
+                                "b b b";
+                                ". . ."]
     | (L, _) ->
-       (". . o" ^ "\n" ^
-        "o o o" ^ "\n" ^
-        ". . ." ^ "\n")
+       String.concat ~sep:"\n" [". . o";
+                                "o o o";
+                                ". . ."]
     | (T, _) ->
-       (". m ." ^ "\n" ^
-        "m m m" ^ "\n" ^
-        ". . ." ^ "\n")
+       String.concat ~sep:"\n" [". m .";
+                                "m m m";
+                                ". . ."]
     | _ ->
-        (". . . ." ^ "\n" ^
-         ". . . ." ^ "\n" ^
-         ". . . ." ^ "\n" ^
-         ". . . ." ^ "\n")) in
-  begin
-    Out_channel.output_string Out_channel.stdout tetramino_string;
-    Out_channel.flush Out_channel.stdout
-  end
+       String.concat ~sep:"\n" [". . . .";
+                                ". . . .";
+                                ". . . .";
+                                ". . . ."]
+     in
+     begin
+       Out_channel.output_string Out_channel.stdout tetramino_string;
+       Out_channel.flush Out_channel.stdout
+     end
 ;;
 
 let rec condense_list list =
