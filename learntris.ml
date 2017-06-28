@@ -3,6 +3,14 @@ open Core;;
 type tetramino = I | O | Z | S | J | L | T | None;;
 type rotation = Left | Right | Mirrored | Normal;;
 
+let advance_rotation rotation =
+  match rotation with
+  | Left -> Normal
+  | Normal -> Right
+  | Right -> Mirrored
+  | Mirrored -> Left
+;;
+
 let is_tetramino x =
   match x with
   | "I" | "O" | "Z" | "S" | "J" | "L" | "T" -> true
@@ -117,18 +125,41 @@ let one_step board game_data =
 let print_tetramino tetramino_tuple =
   let tetramino_string =
     match tetramino_tuple with
-    | (I, _) ->
-       String.concat ~sep:"\n" [". . . .";
-                                "c c c c";
-                                ". . . .";
-                                ". . . ."]
+    | (I, rotation) ->
+       (match rotation with
+        | Normal -> String.concat ~sep:"\n" [". . . .";
+                                             "c c c c";
+                                             ". . . .";
+                                             ". . . ."]
+        | Mirrored -> String.concat ~sep:"\n" [". . . .";
+                                               ". . . .";
+                                               "c c c c";
+                                               ". . . ."]
+        | Left -> String.concat ~sep:"\n" [". c . .";
+                                           ". c . .";
+                                           ". c . .";
+                                           ". c . ."]
+        | Right -> String.concat ~sep:"\n" [". . c .";
+                                            ". . c .";
+                                            ". . c .";
+                                            ". . c ."])
     | (O, _) ->
        String.concat ~sep:"\n" ["y y";
                                 "y y"]
-    | (Z, _) ->
-       String.concat ~sep:"\n" ["r r .";
-                                ". r r";
-                                ". . ."]
+    | (Z, rotation) ->
+       (match rotation with
+        | Normal -> String.concat ~sep:"\n" ["r r .";
+                                             ". r r";
+                                             ". . ."]
+        | Mirrored -> String.concat ~sep:"\n" [". . .";
+                                               "r r .";
+                                               ". r r"]
+        | Left -> String.concat ~sep:"\n" [". r .";
+                                           "r r .";
+                                           "r . ."]
+        | Right -> String.concat ~sep:"\n" [". . r";
+                                            ". r r";
+                                            ". r ."])
     | (S, _) ->
        String.concat ~sep:"\n" [". g g";
                                 "g g .";
@@ -152,7 +183,7 @@ let print_tetramino tetramino_tuple =
                                 ". . . ."]
      in
      begin
-       Out_channel.output_string Out_channel.stdout tetramino_string;
+       Out_channel.output_string Out_channel.stdout (tetramino_string ^ "\n");
        Out_channel.flush Out_channel.stdout
      end
 ;;
@@ -195,6 +226,11 @@ let rec input_loop board game_data command_queue =
   | Some x when x = "s" ->
      let (new_board, new_data) = one_step board game_data in
      input_loop new_board new_data command_queue
+  | Some x when x = ")" ->
+     input_loop board
+                {game_data with tetramino_rotation =
+                                  (advance_rotation game_data.tetramino_rotation)}
+                command_queue
   | Some x when x = "t" ->
      begin
        print_tetramino (game_data.active_tetramino, game_data.tetramino_rotation);
