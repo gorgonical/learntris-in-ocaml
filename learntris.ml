@@ -236,6 +236,12 @@ let rec input_loop board game_data command_queue =
        print_tetramino (game_data.active_tetramino, game_data.tetramino_rotation);
        input_loop board game_data command_queue
      end
+  | Some x when x = ";" ->
+     begin
+       Out_channel.output_string Out_channel.stdout "\n";
+       Out_channel.flush Out_channel.stdout;
+       input_loop board game_data command_queue
+     end
   | Some x when is_tetramino x ->
      input_loop board {game_data with active_tetramino = tetramino_from_string x;} command_queue
   | Some x when (String.is_prefix x ~prefix:"?") ->
